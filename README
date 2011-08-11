@@ -1,0 +1,1 @@
+Summa is a little CoffeeScript / JavaScript library for descriptive (summary) statistics and working with distributions (PMF, CDF). Open-source because why-the-heck-not, but don't expect any support. Most of it was built to help solve exercises in Allen Downey's excellent Think Stats book. Should work both in the browser and in node.js.
