@@ -2,7 +2,10 @@
 See https://github.com/mbostock/d3/wiki/Arrays for bisection
 ###
 
-module.exports = _ = require 'underscore'
+if process?
+    module.exports = _ = require 'underscore'
+else
+    module.exports = _ = window._
 
 _.mixin
     sum: (list) ->

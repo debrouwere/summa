@@ -1,6 +1,6 @@
 _ = require './helpers'
 
-module.exports =
+module.exports = 
     round: (number, digits = 0) ->
         multiple = Math.pow 10, digits
         Math.round(number * multiple) / multiple
