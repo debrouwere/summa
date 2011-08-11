@@ -16,14 +16,32 @@ class Calculator
         _.sum(@distribution.values)/@distribution.values.length
         
     median: ->
-        values = _.sortBy @distribution.values, (a) -> a
+        values = _.sortBy @distribution.values, (x) -> x
         i = Math.round values.length/2
         values[i-1]
 
     interpolated_median: ->
+        if @has_true_median()
+            @median()
+        else
+            lh = math.floor(0.5*@distribution.values.length) - 1
+            math.sum(@distribution.values[lh..lh+1]...)/2
+
+    has_true_median: ->
+        # any distribution with an odd amount 
+        # of observations has a true median
+        @distribution.values.length % 2 is 1
     
-    mode: ->
-        # piggyback on PMF method
+    modes: ->
+        values = _.items @pmf().values
+        values = _.sortBy values, (x) -> x[1]
+        [most_frequent, highest_frequency] = _.last(values)
+
+        modes = values.filter (value) -> value[1] == highest_frequency
+        modes.map (mode) -> parseFloat mode[0]
+
+    is_multimodal: ->
+        @modes().length > 1
     
     mean_deviation: (mu, power = 1) ->
         mu ?= @mean()
@@ -81,7 +99,7 @@ class Calculator
     rank: ->
         # piggyback on CDF method
     
-    frequency: (n) ->
+    count: (n) ->
         if n
             occurrences = @distribution.values.filter (value) -> value is n
             occurrences.length

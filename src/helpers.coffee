@@ -36,6 +36,9 @@ _.mixin
 
         items
 
+    tuples: (hash) ->
+        _.items hash
+
     # a smart partitioning algorithm that makes very
     # evenly divided chunks, instead of overstuffing
     # the last partition

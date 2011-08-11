@@ -1,3 +1,5 @@
+_ = require './helpers'
+
 module.exports =
     round: (number, digits = 0) ->
         multiple = Math.pow 10, digits
@@ -16,6 +18,9 @@ module.exports =
 
     ceil: Math.ceil
     ceiling: Math.ceiling
+
+    sum: ->
+        _.reduce arguments, ((a, b) -> a+b), 0
 
     factorial: (n) ->
         return 1 unless n > 1
