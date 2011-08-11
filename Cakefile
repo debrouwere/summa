@@ -46,6 +46,9 @@ task 'build:browser', 'merge and uglify the code for usage in a browser environm
             return require['./index'];
         }();
         """
+    
+    {parser, uglify} = require 'uglify-js'
+    code = uglify.gen_code uglify.ast_squeeze uglify.ast_mangle parser.parse code
 
     fs.writeFileSync 'summa.min.js', header + code
 

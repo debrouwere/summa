@@ -7,7 +7,8 @@
     "dependencies": {
         "coffee-script": "latest", 
         "expresso": "latest",
-        "should": "latest"
+        "should": "latest",
+        "uglify-js": "latest"
     },
     "repository": {
         "type": "git", 
