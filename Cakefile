@@ -10,4 +10,4 @@ task 'build', 'build the JavaScript source files', ->
 
 task 'test', 'run the summa test suite', ->
     exec 'expresso lib/test/*', (error, stdout, stderr) ->
-        process.stdout.write stderr
+        process.stderr.write stderr
