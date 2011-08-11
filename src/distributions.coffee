@@ -64,14 +64,17 @@ class Calculator
         
         3*(mu-median)/dev
     
-    stddev: ->
-        Math.sqrt @variance.apply @, arguments
+    stddev: (n = 1) ->
+        n * Math.sqrt @variance.apply @, arguments
     
     range: ->
         [Math.min.apply(null, @distribution.values), Math.max.apply(null, @distribution.values)]
 
     approximate_interquartile_range: ->
-        values = @distribution.values        
+        values = @distribution.values
+        # we don't use @rank percentile: 25 because ordinal percentiles
+        # are always rounded upwards, whereas for our approximation
+        # we want the closest match, up or down
         left = math.round(0.25*values.length)
         right = values.length - left
         left_percentile = left/values.length
@@ -85,19 +88,37 @@ class Calculator
 
     interpolated_interquartile_range: ->
         values = @distribution.values        
-        left = math.floor(0.25*values.length)
+        left = @index(percentile: 25)
         right = values.length - left
 
         lh = (@distribution.values[left-1] + @distribution.values[left]) / 2
-        rh = (@distribution.values[right-1] + @distribution.values[right-2]) / 2
+        rh = (@distribution.values[right-1] + @distribution.values[right]) / 2
 
         [lh, rh]
     
     interquartile_range: ->    
-        _.values @approximate_interquartile_range()
-        
-    rank: ->
-        # piggyback on CDF method
+        lh = @index(percentile: 25)
+        rh = @index(percentile: 75)
+        [@distribution.values[lh], @distribution.values[rh]]
+
+    index: (options) ->
+        @rank(options) - 1
+
+    rank: (options) ->
+        if options.value?
+            _.bisect_left(@distribution.values, options.value) + 1
+        else if options.percentile?
+            # although the + 1/2 is really arbitrary, this is a
+            # common textbook definition according to Wikipedia
+            rank = options.percentile/100 * @distribution.values.length + 1/2
+            # ranks are ordinal
+            math.round rank
+        else
+            throw new Error "We can only rank given a percentile or a value"
+
+    percentile: (value) ->
+        rank = @rank value: value
+        math.ceil rank/@distribution.values.length * 100
     
     count: (n) ->
         if n
@@ -105,6 +126,12 @@ class Calculator
             occurrences.length
         else
             @distribution.values.length
+
+Calculator::local = [
+    'index'
+    'rank'
+    'percentile'
+    ]
 
 class Histogram
     constructor: (@distribution) ->
@@ -164,7 +191,9 @@ class Distribution
         # we can think of
         @calculate = new Calculator @
 
-        @precalculations ?= _.functions Calculator.prototype
+        if not @precalculations?
+            fns = _.functions Calculator.prototype
+            @precalculations = _.reject fns, (fn) -> _.contains(Calculator::local, fn)
         
         for calculation in @precalculations
             @[calculation] = @calculate[calculation]()
