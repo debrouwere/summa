@@ -1,5 +1,5 @@
 module.exports =
-    round: (value, digits = 0) ->
+    round: (number, digits = 0) ->
         multiple = Math.pow 10, digits
         Math.round(number * multiple) / multiple
 
@@ -11,6 +11,11 @@ module.exports =
 
     max: Math.max
     maximum: Math.max
+
+    floor: Math.floor
+
+    ceil: Math.ceil
+    ceiling: Math.ceiling
 
     factorial: (n) ->
         return 1 unless n > 1

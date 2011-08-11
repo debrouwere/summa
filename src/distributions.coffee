@@ -5,10 +5,12 @@ class Calculator
     constructor: (@distribution) ->
 
     pmf: ->
-        new Pmf @distribution
+        return @_pmf if @_pmf?
+        @_pmf = new Pmf @distribution
 
     cdf: ->
-        new Cdf @distribution
+        return @_cdf if @_cdf?
+        @_cdf = new Cdf @distribution
 
     mean: ->
         _.sum(@distribution.values)/@distribution.values.length
@@ -17,6 +19,8 @@ class Calculator
         values = _.sortBy @distribution.values, (a) -> a
         i = Math.round values.length/2
         values[i-1]
+
+    interpolated_median: ->
     
     mode: ->
         # piggyback on PMF method
@@ -47,9 +51,32 @@ class Calculator
     
     range: ->
         [Math.min.apply(null, @distribution.values), Math.max.apply(null, @distribution.values)]
+
+    approximate_interquartile_range: ->
+        values = @distribution.values        
+        left = math.round(0.25*values.length)
+        right = values.length - left
+        left_percentile = left/values.length
+        right_percentile = right/values.length
+
+        range = {}
+        range[left_percentile] = @distribution.values[left-1]
+        range[right_percentile] = @distribution.values[right-1]
+
+        range
+
+    interpolated_interquartile_range: ->
+        values = @distribution.values        
+        left = math.floor(0.25*values.length)
+        right = values.length - left
+
+        lh = (@distribution.values[left-1] + @distribution.values[left]) / 2
+        rh = (@distribution.values[right-1] + @distribution.values[right-2]) / 2
+
+        [lh, rh]
     
-    interquartile_range: ->
-        # piggyback on CDF method
+    interquartile_range: ->    
+        _.values @approximate_interquartile_range()
         
     rank: ->
         # piggyback on CDF method
@@ -72,7 +99,7 @@ class Histogram
     # as a probability mass function
     normalize: ->
         pmf = _.clone @
-        size = _.size pmf.values
+        size = pmf.distribution.values.length
 
         for key, count of pmf.values
             pmf.values[key] = count/size
@@ -118,7 +145,8 @@ class Distribution
         # if nothing is specified, we calculate every summary value
         # we can think of
         @calculate = new Calculator @
-        @precalculations ?= _.functions @calculate
+
+        @precalculations ?= _.functions Calculator.prototype
         
         for calculation in @precalculations
             @[calculation] = @calculate[calculation]()
@@ -178,5 +206,6 @@ class Distribution
     resample: (n, options) ->
         # create a CDF
 
+exports.Calculator = Calculator
 exports.Distribution = Distribution
 exports.Histogram = Histogram

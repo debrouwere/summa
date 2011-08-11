@@ -26,15 +26,15 @@ _.mixin
 
         return 0
 
+    bisect_left: (list, point) ->
+        _.bisect list, point, (a, b) -> a >= b
+
     items: (hash) ->
         items = []
         for k, v of hash
             items.push [k, v]
 
         items
-
-    bisect_left: (list, point) ->
-        _.bisect list, point, (a, b) -> a >= b
 
     # a smart partitioning algorithm that makes very
     # evenly divided chunks, instead of overstuffing
