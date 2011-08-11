@@ -225,20 +225,24 @@ class Distribution
         else if options.stddev
             'todo'
 
-    to: (type) ->
-        switch type.toLowerCase()
-            when 'pmf'
-                'todo'
-            when 'cdf'
-                'todo'
-
+    # note that absolute difference and relative difference
+    # are not counterpoints to each other, they're different
+    # calculations altogether
     difference: (distribution, options) ->
+        unless @values.length == distribution.values.length
+            throw Error "Can only compare two like-sized distributions"
+
+        sets = _.zip(@values, distribution.values)
+        
         # relative risk
-        if options.relative
-            'todo'
+        if options?.relative == yes
+            sets.map (value) -> value[1] / value[0]
+        # absolute difference
+        else if options?.absolute == yes
+            sets.map (value) -> Math.abs value[1] - value[0]
         # regular difference
         else
-            'todo'
+            sets.map (value) -> value[1] - value[0]
 
     partition: (n) ->
         _.partition(@values, n).map (partition) -> new Distribution partition, @precalculations

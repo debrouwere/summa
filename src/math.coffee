@@ -5,6 +5,9 @@ module.exports =
         multiple = Math.pow 10, digits
         Math.round(number * multiple) / multiple
 
+    abs: Math.abs
+    absolute: Math.absolute
+
     pow: Math.pow
     power: Math.pow
 
