@@ -69,8 +69,14 @@ class Calculator
         
         3*(mu-median)/dev
     
-    stddev: (n = 1) ->
-        n * Math.sqrt @variance.apply @, arguments
+    stddev: (k = 1) ->
+        k * Math.sqrt @variance.apply @, arguments
+
+    central_moment: (k = 1) ->
+        'todo'
+
+    kurtosis: ->
+        'todo'
     
     range: ->
         [Math.min.apply(null, @distribution.values), Math.max.apply(null, @distribution.values)]

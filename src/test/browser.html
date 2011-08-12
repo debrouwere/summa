@@ -1,10 +1,37 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="/underscore.js"></script>
+        <!-- summa and its underscore dependency -->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.1.7/underscore-min.js"></script>
         <script src="../../summa.min.js"></script>
+        <!-- flot and its jQuery dependency -->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+        <script src="https://raw.github.com/flot/flot/master/jquery.flot.js"></script>
+        <!-- CoffeeScript support -->
+        <script src="https://raw.github.com/jashkenas/coffee-script/master/extras/coffee-script.js"></script>
+        <!-- some mucking about with flot -->
+        <script type="text/coffeescript">
+        data = new summa.distributions.Distribution [1,2,4,8,16,64,64,64]
+
+        points = _.zip _.range(data.values.length), data.values
+        cdf = _.tuples data.cdf.values
+        sets = [points, cdf]
+        
+        options =
+            xaxis:
+                min: 0
+                max: data.count
+            yaxis:
+                min: 0
+                max: summa.math.round(data.range[1], -1)
+
+        $(document).ready ->
+            canvas = $("#canvas")
+            $.plot canvas, sets, options
+        </script>
     </head>
     <body>
+        <div id="canvas" style="width:600px;height:300px"></div>
     </body>
 </html>
     
