@@ -1,6 +1,11 @@
 _ = require './helpers'
 math = require './math'
 
+# Calculator is a class that allows us to do calculations on a distribution.
+# **All calculations that don't return a new distribution are housed here**, whereas those
+# that do (transformations) are housed in the Distribution class, which we'll see later.
+#
+# Why? No particular reason, except for tidiness.
 class Calculator
     constructor: (@distribution) ->
 
@@ -95,14 +100,13 @@ class Calculator
         rh = (@distribution.values[right-1] + @distribution.values[right]) / 2
 
         [lh, rh]
-    
+
+    # The interquartile range is a measure of spread.
+    # It cuts off the lowest and highest 25% of data.
     interquartile_range: ->    
         lh = @index(percentile: 25)
         rh = @index(percentile: 75)
         [@distribution.values[lh], @distribution.values[rh]]
-
-    index: (options) ->
-        @rank(options) - 1
 
     rank: (options) ->
         if options.value?
@@ -116,6 +120,12 @@ class Calculator
         else
             throw new Error "We can only rank given a percentile or a value"
 
+    # Statistics traditionally talks about ranks, which go from 1 to n, 
+    # but us computer programmers know better, and index lists from 0 
+    # onwards. The index is the rank minus one. 
+    index: (options) ->
+        @rank(options) - 1
+
     percentile: (value) ->
         rank = @rank value: value
         math.ceil rank/@distribution.values.length * 100
@@ -127,6 +137,10 @@ class Calculator
         else
             @distribution.values.length
 
+# A lot of calculations make sense on both the entire dataset and a smaller 
+# part of it. For example, you can count the frequency of a certain value, but 
+# you can also count all data points at a time. But other calculations really
+# only work for a specific range or data point, and here's a list of those.
 Calculator::local = [
     'index'
     'rank'
@@ -187,8 +201,11 @@ Cdf = (distribution) ->
 
 class Distribution
     constructor: (@values, @precalculations) ->
-        # if nothing is specified, we calculate every summary value
-        # we can think of
+        # When creating a new distribution, people can specifically ask
+        # **which summary statistics they wish to be calculated**.
+        # But if they don't ask for anything in particular, we 
+        # calculate every summary value we can think of -- the computing
+        # time is negligable anyway, except for really big data sets.
         @calculate = new Calculator @
 
         if not @precalculations?
@@ -251,7 +268,7 @@ class Distribution
         s = random.sample @values, n, options.replacement
         new Distribution s, @precalculations
 
-    # resampling differs from sampling in that resampling generates random
+    # Resampling differs from sampling in that resampling generates random
     # values that fit the distribution instead of picking random values from
     # the existing data.
     resample: (n, options) ->
