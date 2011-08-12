@@ -17,14 +17,41 @@ class Calculator
         return @_cdf if @_cdf?
         @_cdf = new Cdf @distribution
 
+    # The arithmetic mean, also known as average, is a measure of central tendency, like
+    # the median.
+    #
+    # The mean is the bread and butter of descriptive statistics, but it's not a very robust
+    # statistic: it is easily influenced by outliers in the data.
     mean: ->
         _.sum(@distribution.values)/@distribution.values.length
-        
+
+    # The median is the middle value of a dataset. But datasets with an 
+    # even number of observations don't have a real "middle", so they 
+    # don't have a true median.
+    #
+    # In those cases, we'll pick the value closest to the median (using the
+    # `median` method) or take the average of the two values closest to the
+    # median (using the `interpolated_median` method).
+    has_true_median: ->
+        # any distribution with an odd amount 
+        # of observations has a true median
+        @distribution.values.length % 2 is 1
+
+    # The median is another measure of central tendency, and it's defined as the
+    # center value of a distribution: it separates the higher and lower halves of
+    # a sample.
+    #
+    # The median is more robust than the mean (outliers don't sway the median) but 
+    # less exact.
     median: ->
         values = _.sortBy @distribution.values, (x) -> x
         i = Math.round values.length/2
         values[i-1]
 
+    # Some people like their medians interpolated.
+    # This method calculates the average between the two middle values in an
+    # even-numbered sample. This is the simplest interpolation calculation
+    # possible, but less refined than e.g. using a weighted average.
     interpolated_median: ->
         if @has_true_median()
             @median()
@@ -32,11 +59,14 @@ class Calculator
             lh = math.floor(0.5*@distribution.values.length) - 1
             math.sum(@distribution.values[lh..lh+1]...)/2
 
-    has_true_median: ->
-        # any distribution with an odd amount 
-        # of observations has a true median
-        @distribution.values.length % 2 is 1
-    
+    # In the dataset [1,1,2,2,3] both 1 and 2 are a tie for the most frequent value, 
+    # also known as the mode. We call datasets like that **multimodal**.
+    is_multimodal: ->
+        @modes().length > 1
+
+    # The mode of a distribution is the most frequently occuring value.
+    # Modes need not be unique, which is why this method always returns
+    # an array.
     modes: ->
         values = _.items @pmf().values
         values = _.sortBy values, (x) -> x[1]
@@ -45,9 +75,14 @@ class Calculator
         modes = values.filter (value) -> value[1] == highest_frequency
         modes.map (mode) -> parseFloat mode[0]
 
-    is_multimodal: ->
-        @modes().length > 1
-    
+    # The mean deviation is the mean of the differences between each value
+    # and the mean. So for [1,2,3] the mean is 2, the differences are [-1,0,1], 
+    # of which we'll calculate the mean.
+    #
+    # A good observer will see that these differences tend to cancel each other out, 
+    # which is why we never really care about the mean deviation, but do care about 
+    # the squared mean deviation (also known as variance) and the cubed mean deviation
+    # (which is used to calculate the skewness of a dataset).
     mean_deviation: (mu, power = 1) ->
         mu ?= @mean()
         deviations = (Math.pow(x - mu,  power) for x in @distribution.values)
@@ -56,6 +91,16 @@ class Calculator
     variance: (mu) ->
         @mean_deviation mu, 2
 
+    # Skewness is a measure of the asymmetry of a probability distribution.
+    # If the probability density is higher to the righthand side of a 
+    # distribution, that's positive skew. If the big probabilities occur
+    # early on and taper off to the right, that's negative skew.
+    #
+    # Skewness is an interesting metric, but it's not very robust: in some
+    # datasets, this measurement doesn't really correspond to how skewed we
+    # intuitively think the dataset to be.
+    #
+    # Pearson skewness is often a more reliable measure of asymmetry.
     skewness: (mu) ->
         m2 = @mean_deviation mu, 2
         m3 = @mean_deviation mu, 3
@@ -68,7 +113,20 @@ class Calculator
         dev = @stddev()
         
         3*(mu-median)/dev
-    
+
+    # The standard deviation is a widely used unit of dispersion.
+    # 
+    # To give you a bit of a feel as to what a standard deviation is like: 
+    # in a normal distribution (a bell curve), about 34% of the data fits
+    # in one standard deviation, and 68% of the data is within one standard
+    # deviation of the mean (above and below).
+    # 
+    # The symbol for the standard deviation is sigma. You may have heard of 
+    # "six sigma", which is a method some companies use to make sure that their
+    # manufactured goods all work as they should.
+    #
+    # The standard deviation is the square root of the variance, another (but less 
+    # frequently used) unit of dispersion.
     stddev: (k = 1) ->
         k * Math.sqrt @variance.apply @, arguments
 
@@ -77,9 +135,23 @@ class Calculator
 
     kurtosis: ->
         'todo'
-    
-    range: ->
+
+    # The interval is the lower and upper bound of the data.
+    #
+    # Mathematically speaking: the set of real numbers with the property that any 
+    # number that lies between two numbers in the set is also included in the set.
+    interval: ->
         [Math.min.apply(null, @distribution.values), Math.max.apply(null, @distribution.values)]
+
+    # The range is the length of the smallest interval which contains all the data.
+    # It is an indication of statistical dispersion, but usually not a very robust
+    # one, because it only relies on two observations.
+    #
+    # The range is either equal to, or more often, greater than twice the standard
+    # deviation.
+    range: ->
+        [min, max] = @interval()
+        max - min
 
     approximate_interquartile_range: ->
         values = @distribution.values
@@ -221,10 +293,17 @@ class Distribution
         for calculation in @precalculations
             @[calculation] = @calculate[calculation]()
 
-    normalize: (range = {}) ->
+    # Rebasing a data set means picking a new minimum or maximum value, and 
+    # transforming the dataset to match the new range.
+    # This is also commonly called normalization, but to avoid confusion, 
+    # we're reserving that name to refer to the concept of converting a 
+    # histogram's values from frequencies to probabilities (a normalization 
+    # between 0-1).
+    rebase: (range = {}) ->
         options = {top: 1}
         range = _.extend(range, options)
-    
+
+        # TODO: support for both a bottom *and* top argument
         if range.bottom
             min = Math.min.apply null, @values
             ratio = range.bottom/min
@@ -235,11 +314,26 @@ class Distribution
         values = @values.map (value) -> value*ratio        
         new Distribution values, @precalculations
 
+    # Sometimes, we're not interested in detail, and sometimes we
+    # our data has only a couple of significant digits, both of 
+    # which are good reasons for rounding the dataset.
+    #
+    # This method can also round to the nearest ten, hundred etc.
+    # For example, dist.round(-2) will convert the dataset [17, 122]
+    # to [0,100].
     round: (digits = 0) ->
         values = @values.map (value) -> math.round value, digits
         
         new Distribution values, @precalculations
 
+    # Datasets often have outlying data, which isn't always reliable: 
+    # much of it might be measurement errors or noise. In that case, 
+    # trimming the dataset is a good idea.
+    #
+    # You can trim to either encompass a certain percentage of the data, 
+    # (like 50% to get the data in the interquartile range), between a
+    # certain lower or higher point, or an amount of standard deviations
+    # above and below the mean.
     trim: (options) ->
         if options.percentage
             'todo'
