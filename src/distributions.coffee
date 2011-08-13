@@ -1,5 +1,5 @@
 _ = require './helpers'
-math = require './math'
+math = require('math').math
 
 # Calculator is a class that allows us to do calculations on a distribution.
 # **All calculations that don't return a new distribution are housed here**, whereas those
@@ -141,7 +141,13 @@ class Calculator
     # Mathematically speaking: the set of real numbers with the property that any 
     # number that lies between two numbers in the set is also included in the set.
     interval: ->
-        [Math.min.apply(null, @distribution.values), Math.max.apply(null, @distribution.values)]
+        [@bottom(), @top()]
+
+    bottom: ->
+        Math.min.apply(null, @distribution.values)
+
+    top: ->
+        Math.max.apply(null, @distribution.values)
 
     # The range is the length of the smallest interval which contains all the data.
     # It is an indication of statistical dispersion, but usually not a very robust

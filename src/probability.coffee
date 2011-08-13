@@ -1,5 +1,5 @@
 _ = require './helpers'
-math = require './math'
+math = require('math').math
 distributions = require './distributions'
 fac = math.factorial
 pow = math.power

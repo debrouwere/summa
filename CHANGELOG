@@ -1,0 +1,12 @@
+CHANGELOG
+
+0.2.0
+
+  * Ported and beautified various stats-related code I had lying around from Python to CoffeeScript.
+  * Added a `random` submodule, mimicking the functionality of Python's eponymous library.
+  * Added lots of docstrings, à la literate programming.
+
+0.3.0
+
+  * Extracted maths-related code into a separate library, aptly named `math`. Summa now relies
+    on this external library.

@@ -3,7 +3,8 @@
     <head>
         <!-- summa and its underscore dependency -->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.1.7/underscore-min.js"></script>
-        <script src="../../summa.min.js"></script>
+        <script src="/math/math.min.js"></script>
+        <script src="/summa/summa.min.js"></script>
         <!-- flot and its jQuery dependency -->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
         <script src="https://raw.github.com/flot/flot/master/jquery.flot.js"></script>
@@ -23,7 +24,7 @@
                 max: data.count
             yaxis:
                 min: 0
-                max: summa.math.round(data.range[1], -1)
+                max: math.math.round(data.interval[1], -1)
 
         $(document).ready ->
             canvas = $("#canvas")
