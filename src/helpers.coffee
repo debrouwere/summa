@@ -14,6 +14,10 @@ _.mixin
         
         inverted_hash
 
+    # Locate the insertion point for x in a to maintain sorted order.
+    # Returns an insertion point which comes after (to the right of) any existing entries
+    # of the point in the list.
+    # Inspired on Python's `bisect` module.
     bisect: (list, point, cmp) ->
         cmp ?= (a, b) -> a > b
     
@@ -23,8 +27,12 @@ _.mixin
             if cmp(item, point)
                 return index
 
-        return 0
+        return list.length
 
+    bisect_right: -> _.bisect arguments...
+
+    # Similar to bisect, but returns an insertion point which comes before any 
+    # existing entries of the point in the list.
     bisect_left: (list, point) ->
         _.bisect list, point, (a, b) -> a >= b
 

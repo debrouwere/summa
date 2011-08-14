@@ -194,7 +194,7 @@ class Calculator
 
     rank: (options) ->
         if options.value?
-            _.bisect_left(@distribution.values, options.value) + 1
+            math.rank @distribution.values, options.value
         else if options.percentile?
             # although the + 1/2 is really arbitrary, this is a
             # common textbook definition according to Wikipedia
@@ -237,6 +237,17 @@ class Histogram
         
         for x in @distribution.values
             @values[x] = (@values[x] or 0) + 1
+
+        # if every value in our distribution is linked to 
+        # an equal amount of observations, we have a
+        # uniform distribution.
+        first = _.keys(@values)[0]
+        tally = _.values(@values)
+        
+        if _.every(tally, (value) => value == @values[first])
+            @is_uniform = true
+        else
+            @is_uniform = false
 
     # creates a normalized histogram, also known 
     # as a probability mass function
@@ -311,10 +322,10 @@ class Distribution
 
         # TODO: support for both a bottom *and* top argument
         if range.bottom
-            min = Math.min.apply null, @values
+            min = math.min @values
             ratio = range.bottom/min
         else if range.top
-            max = Math.max.apply null, @values
+            max = math.max @values
             ratio = range.top/max
 
         values = @values.map (value) -> value*ratio        
@@ -341,12 +352,25 @@ class Distribution
     # certain lower or higher point, or an amount of standard deviations
     # above and below the mean.
     trim: (options) ->
+        # Array#slice extracts up to but not including `end`. If we want a percentage
+        # of data, that means adding one to the righthand boundary. In the other cases,
+        # using _.bisect_right gives us an index that's one above where the bisection
+        # would happen, which has the same effect.
         if options.percentage
-            'todo'
+            # TODO: I don't believe this is quite right yet. Perhaps it shouldn't
+            # depend on @calculate.index, which is ordinal and thus inexact, whereas
+            # this function needn't be.
+            lh = @calculate.index(percentile: 50-math.ceil(options.percentage/2))
+            rh = @calculate.index(percentile: 50+math.ceil(options.percentage/2)) + 1
         else if options.lt or options.gt
-            'todo'
+            # todo: support for lte and gte
+            lh = _.bisect_left  @values, options.lt or @calculate.bottom()
+            rh = _.bisect_right @values, options.gt or @calculate.top()
         else if options.stddev
-            'todo'
+            lh = _.bisect_left  @values, @calculate.mean() - options.stddev * @calculate.stddev()
+            rh = _.bisect_right @values, @calculate.mean() + options.stddev * @calculate.stddev()
+
+        new Distribution @values.slice(lh, rh), @precalculations
 
     # note that absolute difference and relative difference
     # are not counterpoints to each other, they're different

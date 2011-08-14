@@ -1,2 +1,3 @@
 * Implement some of the summary statistics from http://docs.scipy.org/doc/scipy/reference/stats.html
 * Introduce some helpers for doing Monte Carlo simulations.
+* Memoize all the functions in distributions.Calculator

@@ -27,3 +27,24 @@ module.exports =
         
         relative.should.not.eql absolute
         inverse_relative.should.eql absolute
+
+    # another one of those functions where it's easy to be off by one
+    "trim a distribution to x standard deviations around the mean": ->
+        trimmed = simple_odd.trim(stddev: 1)
+        trimmed.count.should.equal 5
+        trimmed.interval.should.eql [3, 7]
+        
+    "trim a distribution to the x% of the data, centered on the mean": ->
+
+    "trim a distribution to only include values in a certain range": ->
+        trimmed = simple_odd.trim(lt: 5)
+        trimmed.count.should.equal 5
+        trimmed.interval.should.eql [5, 9]
+
+        trimmed = simple_odd.trim(gt: 8)
+        trimmed.count.should.equal 8
+        trimmed.interval.should.eql [1, 8]
+
+        trimmed = simple_odd.trim(lt: 3, gt: 7)
+        trimmed.count.should.equal 5
+        trimmed.interval.should.eql [3, 7]
