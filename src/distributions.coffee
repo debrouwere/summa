@@ -8,6 +8,7 @@ math = require('math').math
 # Why? No particular reason, except for tidiness.
 class Calculator
     constructor: (@distribution) ->
+        #@closest = _.bindAll @closest
 
     pmf: ->
         return @_pmf if @_pmf?
@@ -192,17 +193,33 @@ class Calculator
         rh = @index(percentile: 75)
         [@distribution.values[lh], @distribution.values[rh]]
 
-    rank: (options) ->
+    # The closest rank corresponding to a value or a percentile.
+    # Most likely, you're looking for the `rank` method instead, 
+    # which follows the most common definition of an ordinal rank.
+    closest_rank: (options) ->
         if options.value?
             math.rank @distribution.values, options.value
         else if options.percentile?
-            # although the + 1/2 is really arbitrary, this is a
-            # common textbook definition according to Wikipedia
-            rank = options.percentile/100 * @distribution.values.length + 1/2
+            rank = options.percentile/100 * @distribution.values.length
             # ranks are ordinal
             math.round rank
         else
             throw new Error "We can only rank given a percentile or a value"
+
+    closest_index: (options) ->
+        @closest_rank(options) - 1
+            
+    rank: (options) ->
+        # The common definition for calculating a rank from a 
+        # percentile is to do percentile/100 * n + 1/2 and then
+        # round that number.
+        #
+        # The +1/2 causes the rounding to always be to the nearest
+        # upwards integer, like the `math.ceil` function.
+        if options.percentile?
+            options.percentile += 0.5
+
+        @closest_rank options
 
     # Statistics traditionally talks about ranks, which go from 1 to n, 
     # but us computer programmers know better, and index lists from 0 
@@ -228,6 +245,8 @@ class Calculator
 Calculator::local = [
     'index'
     'rank'
+    'closest_index'
+    'closest_rank'
     'percentile'
     ]
 
@@ -352,18 +371,11 @@ class Distribution
     # certain lower or higher point, or an amount of standard deviations
     # above and below the mean.
     trim: (options) ->
-        # Array#slice extracts up to but not including `end`. If we want a percentage
-        # of data, that means adding one to the righthand boundary. In the other cases,
-        # using _.bisect_right gives us an index that's one above where the bisection
-        # would happen, which has the same effect.
         if options.percentage
-            # TODO: I don't believe this is quite right yet. Perhaps it shouldn't
-            # depend on @calculate.index, which is ordinal and thus inexact, whereas
-            # this function needn't be.
-            lh = @calculate.index(percentile: 50-math.ceil(options.percentage/2))
-            rh = @calculate.index(percentile: 50+math.ceil(options.percentage/2)) + 1
+            lh = @calculate.closest_index(percentile: 50-options.percentage/2) + 1
+            rh = @calculate.closest_index(percentile: 50+options.percentage/2) + 1
         else if options.lt or options.gt
-            # todo: support for lte and gte
+            # TODO: support for lte and gte
             lh = _.bisect_left  @values, options.lt or @calculate.bottom()
             rh = _.bisect_right @values, options.gt or @calculate.top()
         else if options.stddev

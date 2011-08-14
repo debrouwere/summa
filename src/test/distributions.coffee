@@ -3,6 +3,8 @@ distributions = require '../distributions'
 
 simple_odd  = new distributions.Distribution [1..9]
 simple_odd2 = new distributions.Distribution [2..10]
+hundred     = new distributions.Distribution [1..100]
+fivehundred = new distributions.Distribution [1..500]
 
 module.exports = 
     "calculate a median": ->
@@ -35,6 +37,13 @@ module.exports =
         trimmed.interval.should.eql [3, 7]
         
     "trim a distribution to the x% of the data, centered on the mean": ->
+        trimmed = hundred.trim(percentage:80)
+        trimmed.count.should.equal 80
+        trimmed.interval.should.eql [11, 90]
+
+        trimmed = fivehundred.trim(percentage:50)
+        trimmed.count.should.equal 250
+        trimmed.interval.should.eql [126,375]
 
     "trim a distribution to only include values in a certain range": ->
         trimmed = simple_odd.trim(lt: 5)
